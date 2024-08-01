@@ -1,0 +1,4 @@
+[
+  {"name":"person","className":"com.github.poldroc.ioc.test.service.Person"},
+  {"name":"person2","className":"com.github.poldroc.ioc.test.service.Person"}
+]

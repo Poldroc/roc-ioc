@@ -11,8 +11,8 @@ public class JsonApplicationContextTest {
     @Test
     public void simpleTest() {
         BeanFactory beanFactory = new JsonApplicationContext("person.json");
-        Person apple = beanFactory.getBean("person", Person.class);
-        apple.name();
+        Person person = beanFactory.getBean("person", Person.class);
+        person.name();
     }
 
 }
