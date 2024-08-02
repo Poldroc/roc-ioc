@@ -1,6 +1,7 @@
 package com.github.poldroc.ioc.core.impl;
 
 
+import com.github.poldroc.ioc.constant.enums.ScopeEnum;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
@@ -39,8 +40,42 @@ public class DefaultBeanFactory implements BeanFactory {
      * 注册对象定义信息
      */
     protected void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        ArgUtil.notEmpty(beanName, "beanName");
+        ArgUtil.notNull(beanDefinition, "beanDefinition");
         // 这里可以添加监听器
         this.beanDefinitionMap.put(beanName, beanDefinition);
+
+        this.registerTypeBeanNames(beanName, beanDefinition);
+
+        boolean isLazyInit = beanDefinition.isLazyInit();
+        if (!isLazyInit) {
+            this.registerSingletonBean(beanName, beanDefinition);
+        }
+    }
+
+    /**
+     * 注册单例且渴望初期初始化的对象
+     * （1）如果是 singleton & lazy-init=false 则进行初始化处理
+     * （2）创建完成后，对象放入 {@link #beanMap} 中，便于后期使用
+     * （3）
+     * @param beanName bean 名称
+     * @param beanDefinition 对象定义
+     */
+    private Object registerSingletonBean(String beanName, BeanDefinition beanDefinition) {
+        Object bean = beanMap.get(beanName);
+
+        if (bean != null) {
+            return bean;
+        }
+        Object newBean = createBean(beanDefinition);
+        beanMap.put(beanName, newBean);
+        return newBean;
+    }
+
+    /**
+     * 注册类型和 beanNames 信息
+     */
+    private void registerTypeBeanNames(String beanName, BeanDefinition beanDefinition) {
         Class type = getType(beanDefinition);
         Set<String> beanNameSet = typeBeanNameMap.get(type);
         if (beanNameSet == null) {
@@ -64,19 +99,15 @@ public class DefaultBeanFactory implements BeanFactory {
     @Override
     public Object getBean(String beanName) {
         ArgUtil.notNull(beanName, "beanName");
-        Object bean = beanMap.get(beanName);
-        if (bean != null) {
-            // 这里直接返回的是单例，如果用户指定为多例，则每次都需要新建。
-            return bean;
-        }
         BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
         if (beanDefinition == null) {
-            throw new IocRuntimeException(beanName + " not exists in bean define.");
+            throw new IocRuntimeException("beanName: " + beanName + " not exist.");
         }
-        Object newBean = createBean(beanDefinition);
-        beanMap.put(beanName, newBean);
-        return newBean;
-
+        String scope = beanDefinition.getScope();
+        if(!ScopeEnum.SINGLETON.getCode().equals(scope)){
+            return this.createBean(beanDefinition);
+        }
+        return this.registerSingletonBean(beanName, beanDefinition);
     }
 
     @Override

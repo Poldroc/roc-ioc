@@ -59,6 +59,30 @@ public class BeanFactoryTest {
         Assert.assertFalse(BEAN_FACTORY.isTypeMatch("person", BeanFactory.class));
     }
 
+    /**
+     * 单例测试
+     */
+    @Test
+    public void singletonTest() {
+        BeanFactory singleton = new JsonApplicationContext("singleton/person-singleton.json");
+
+        Person singletonOne = singleton.getBean("person", Person.class);
+        Person singletonTwo = singleton.getBean("person", Person.class);
+        Assert.assertSame(singletonOne, singletonTwo);
+    }
+
+    /**
+     * 多例测试
+     */
+    @Test
+    public void prototypeTest() {
+        BeanFactory singleton = new JsonApplicationContext("singleton/person-prototype.json");
+
+        Person singletonOne = singleton.getBean("person", Person.class);
+        Person singletonTwo = singleton.getBean("person", Person.class);
+        Assert.assertNotSame(singletonOne, singletonTwo);
+    }
+
 
 
 }

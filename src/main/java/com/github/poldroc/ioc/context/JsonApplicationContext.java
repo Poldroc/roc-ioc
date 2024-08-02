@@ -23,13 +23,13 @@ public class JsonApplicationContext extends DefaultListableBeanFactory {
 
     public JsonApplicationContext(String fileName) {
         this.fileName = fileName;
-
+        System.out.println(fileName);
         // 初始化配置
         this.init();
     }
 
     private void init() {
-        InputStream is = ClassUtil.currentClassLoader().getResourceAsStream(fileName);
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
         String jsonConfig = FileUtil.getFileContent(is);
         List<DefaultBeanDefinition> beanDefinitions = JsonBs.deserializeArray(jsonConfig, DefaultBeanDefinition.class);
         if (beanDefinitions != null && !beanDefinitions.isEmpty()) {
