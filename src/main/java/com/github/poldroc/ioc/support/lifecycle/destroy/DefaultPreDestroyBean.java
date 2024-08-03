@@ -1,6 +1,7 @@
 package com.github.poldroc.ioc.support.lifecycle.destroy;
 
-import com.github.houbb.heaven.util.util.Optional;
+import com.github.houbb.heaven.util.common.ArgUtil;
+
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.support.lifecycle.DisposableBean;
@@ -9,6 +10,7 @@ import com.github.poldroc.ioc.util.ClassUtil;
 import javax.annotation.PreDestroy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 /**
  * 默认销毁对象
@@ -35,9 +37,19 @@ public class DefaultPreDestroyBean implements DisposableBean {
      */
     private final BeanDefinition beanDefinition;
 
+    /**
+     * 实例类型信息
+     */
+    private final Class instanceClass;
+
     public DefaultPreDestroyBean(Object instance, BeanDefinition beanDefinition) {
+        ArgUtil.notNull(instance, "instance");
+        ArgUtil.notNull(beanDefinition, "beanDefinition");
+
+
         this.instance = instance;
         this.beanDefinition = beanDefinition;
+        this.instanceClass = instance.getClass();
     }
 
     @Override
@@ -52,12 +64,12 @@ public class DefaultPreDestroyBean implements DisposableBean {
 
     private void preDestroy() {
         Optional<Method> methodOptional = ClassUtil.getMethodOptional(instance.getClass(), PreDestroy.class);
-        if (methodOptional.isNotPresent()) {
+        if (!methodOptional.isPresent()) {
             return;
         }
         // 不能有参数
         Method method = methodOptional.get();
-        if ( method.getParameterCount() != 0) {
+        if (method.getParameterCount() != 0) {
             throw new IocRuntimeException("Method annotated with @PreDestroy must not have any parameters.");
         }
         try {

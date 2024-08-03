@@ -1,6 +1,7 @@
 package com.github.poldroc.ioc.support.lifecycle.init;
 
-import com.github.houbb.heaven.util.util.Optional;
+import com.github.houbb.heaven.util.common.ArgUtil;
+
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.support.lifecycle.InitializingBean;
@@ -9,6 +10,7 @@ import com.github.poldroc.ioc.util.ClassUtil;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 /**
  * 默认创建对象初始化
@@ -31,12 +33,21 @@ public class DefaultPostConstructBean implements InitializingBean {
     private final Object instance;
 
     /**
+     * 对象实例类型
+     */
+    private final Class instanceClass;
+
+    /**
      * 对象属性定义
      */
     private final BeanDefinition beanDefinition;
 
     public DefaultPostConstructBean(Object instance, BeanDefinition beanDefinition) {
+        ArgUtil.notNull(instance, "instance");
+        ArgUtil.notNull(beanDefinition, "beanDefinition");
+
         this.instance = instance;
+        this.instanceClass = instance.getClass();
         this.beanDefinition = beanDefinition;
     }
 
@@ -53,7 +64,7 @@ public class DefaultPostConstructBean implements InitializingBean {
 
     private void postConstruct() {
         Optional<Method> methodOptional = ClassUtil.getMethodOptional(instance.getClass(), PostConstruct.class);
-        if (methodOptional.isNotPresent()) {
+        if (!methodOptional.isPresent()) {
             return;
         }
         // 不能有参数
