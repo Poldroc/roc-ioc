@@ -55,4 +55,28 @@ public interface BeanDefinition {
      */
     void setLazyInit(final boolean lazyInit);
 
+    /**
+     * 获取初始化方法
+     * @return 初始化方法
+     */
+    String getInitialize();
+
+    /**
+     * 设置初始化方法
+     * @param initialize 初始化方法
+     */
+    void setInitialize(final String initialize);
+
+    /**
+     * 获取销毁方法
+     * @return 销毁方法
+     */
+    String getDestroy();
+
+    /**
+     * 设置销毁方法
+     * @param destroy 销毁方法
+     */
+    void setDestroy(final String destroy);
+
 }

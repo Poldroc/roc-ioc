@@ -17,6 +17,9 @@ public class DefaultBeanDefinition implements BeanDefinition {
 
     private boolean lazyInit;
 
+    private String initialize;
+
+    private String destroy;
     @Override
     public String getName() {
         return name;
@@ -56,4 +59,25 @@ public class DefaultBeanDefinition implements BeanDefinition {
     public void setLazyInit(boolean lazyInit) {
         this.lazyInit = lazyInit;
     }
+
+    @Override
+    public String getInitialize() {
+        return initialize;
+    }
+
+    @Override
+    public void setInitialize(String initialize) {
+        this.initialize = initialize;
+    }
+
+    @Override
+    public String getDestroy() {
+        return destroy;
+    }
+
+    @Override
+    public void setDestroy(String destroy) {
+        this.destroy = destroy;
+    }
+
 }

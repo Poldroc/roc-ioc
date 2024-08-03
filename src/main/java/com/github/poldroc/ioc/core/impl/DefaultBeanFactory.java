@@ -5,15 +5,18 @@ import com.github.poldroc.ioc.constant.enums.ScopeEnum;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
+import com.github.poldroc.ioc.support.lifecycle.DisposableBean;
+import com.github.poldroc.ioc.support.lifecycle.InitializingBean;
+import com.github.poldroc.ioc.support.lifecycle.destroy.DefaultPreDestroyBean;
+import com.github.poldroc.ioc.support.lifecycle.init.DefaultPostConstructBean;
 import com.github.poldroc.ioc.util.ArgUtil;
 import com.github.poldroc.ioc.util.ClassUtil;
+import javafx.util.Pair;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DefaultBeanFactory implements BeanFactory {
+public class DefaultBeanFactory implements BeanFactory, DisposableBean {
 
     /**
      * 对象信息 map
@@ -35,6 +38,10 @@ public class DefaultBeanFactory implements BeanFactory {
      */
     private Map<Class, Set<String>> typeBeanNameMap = new ConcurrentHashMap<>();
 
+    /**
+     * 实例 与 bean 定义信息 map
+     */
+    private List<Pair<Object, BeanDefinition>> instanceBeanDefinitionList = new ArrayList<>();
 
     /**
      * 注册对象定义信息
@@ -58,7 +65,8 @@ public class DefaultBeanFactory implements BeanFactory {
      * （1）如果是 singleton & lazy-init=false 则进行初始化处理
      * （2）创建完成后，对象放入 {@link #beanMap} 中，便于后期使用
      * （3）
-     * @param beanName bean 名称
+     *
+     * @param beanName       bean 名称
      * @param beanDefinition 对象定义
      */
     private Object registerSingletonBean(String beanName, BeanDefinition beanDefinition) {
@@ -103,10 +111,13 @@ public class DefaultBeanFactory implements BeanFactory {
         if (beanDefinition == null) {
             throw new IocRuntimeException("beanName: " + beanName + " not exist.");
         }
+        // 这里需要考虑 scope 的处理
         String scope = beanDefinition.getScope();
-        if(!ScopeEnum.SINGLETON.getCode().equals(scope)){
+        // 如果是多例，直接创建新的对象即可
+        if (!ScopeEnum.SINGLETON.getCode().equals(scope)) {
             return this.createBean(beanDefinition);
         }
+        // 单例的处理
         return this.registerSingletonBean(beanName, beanDefinition);
     }
 
@@ -144,10 +155,35 @@ public class DefaultBeanFactory implements BeanFactory {
         return bean.getClass();
     }
 
+    /**
+     * 根据对象定义信息创建对象
+     * （1）注解 {@link javax.annotation.PostConstruct}
+     * （2）添加 {@link com.github.poldroc.ioc.support.lifecycle.InitializingBean} 初始化相关处理
+     * （3）添加 {@link BeanDefinition#getInitialize()} 初始化相关处理
+     * <p>
+     * TODO:
+     * 1.后期添加关于构造器信息的初始化
+     * 2.添加对应的BeanPostProcessor处理
+     *
+     * @param beanDefinition 对象属性
+     * @return 对象实例
+     */
     private Object createBean(final BeanDefinition beanDefinition) {
         String className = beanDefinition.getClassName();
         Class clazz = ClassUtil.getClass(className);
-        return ClassUtil.newInstance(clazz);
+        Object instance = ClassUtil.newInstance(clazz);
+
+        // 1. 初始化相关处理
+        // 1.1 直接根据构造器
+        // 1.2 根据构造器，属性，静态方法
+        // 1.3 根据注解处理相关信息
+
+        // 2. 初始化完成之后的调用
+        InitializingBean initializingBean = new DefaultPostConstructBean(instance, beanDefinition);
+        initializingBean.initialize();
+        // 3. 添加到实例列表中，便于后期销毁
+        instanceBeanDefinitionList.add(new Pair<>(instance, beanDefinition));
+        return instance;
     }
 
     /**
@@ -164,4 +200,13 @@ public class DefaultBeanFactory implements BeanFactory {
     }
 
 
+    @Override
+    public void destroy() {
+        for (Pair<Object, BeanDefinition> pair : instanceBeanDefinitionList) {
+            Object instance = pair.getKey();
+            BeanDefinition beanDefinition = pair.getValue();
+            DisposableBean disposableBean = new DefaultPreDestroyBean(instance, beanDefinition);
+            disposableBean.destroy();
+        }
+    }
 }
