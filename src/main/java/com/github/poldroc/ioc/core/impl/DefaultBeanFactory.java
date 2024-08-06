@@ -7,6 +7,7 @@ import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.support.lifecycle.DisposableBean;
 import com.github.poldroc.ioc.support.lifecycle.InitializingBean;
+import com.github.poldroc.ioc.support.lifecycle.create.DefaultNewInstanceBean;
 import com.github.poldroc.ioc.support.lifecycle.destroy.DefaultPreDestroyBean;
 import com.github.poldroc.ioc.support.lifecycle.init.DefaultPostConstructBean;
 import com.github.poldroc.ioc.util.ArgUtil;
@@ -171,11 +172,12 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
     private Object createBean(final BeanDefinition beanDefinition) {
         String className = beanDefinition.getClassName();
         Class clazz = ClassUtil.getClass(className);
-        Object instance = ClassUtil.newInstance(clazz);
+
 
         // 1. 初始化相关处理
         // 1.1 直接根据构造器
         // 1.2 根据构造器，属性，静态方法
+        Object instance = DefaultNewInstanceBean.getInstance().newInstance(this, beanDefinition);
         // 1.3 根据注解处理相关信息
 
         // 2. 初始化完成之后的调用

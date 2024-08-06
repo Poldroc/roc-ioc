@@ -1,4 +1,7 @@
 package com.github.poldroc.ioc.model;
+
+import java.util.List;
+
 /**
  * 对象定义属性
  * @author Poldroc
@@ -78,5 +81,29 @@ public interface BeanDefinition {
      * @param destroy 销毁方法
      */
     void setDestroy(final String destroy);
+
+    /**
+     * 工厂类方法
+     * @Param factoryMethod 工厂类方法
+     */
+    void setFactoryMethod(final String factoryMethod);
+
+    /**
+     * 获取工厂类方法
+     * @return 工厂类方法
+     */
+    String getFactoryMethod();
+
+    /**
+     * 构造器参数列表
+     * @return 构造器参数列表
+     */
+    List<ConstructorArgDefinition> getConstructorArgList();
+
+    /**
+     * 设置构造器参数定义列表
+     * @param constructorArgList 构造器参数列表
+     */
+    void setConstructorArgList(final List<ConstructorArgDefinition> constructorArgList);
 
 }

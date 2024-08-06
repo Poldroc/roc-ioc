@@ -1,9 +1,11 @@
 package com.github.poldroc.ioc.util;
 
 
+import com.github.houbb.heaven.response.exception.CommonRuntimeException;
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -35,6 +37,18 @@ public class ClassUtil {
         }
     }
 
+    public static Method getMethod(Class clazz, String methodName, Class... paramTypes) {
+        com.github.houbb.heaven.util.common.ArgUtil.notNull(clazz, "clazz");
+        com.github.houbb.heaven.util.common.ArgUtil.notEmpty(methodName, "methodName");
+
+        try {
+            return clazz.getMethod(methodName, paramTypes);
+        } catch (NoSuchMethodException var4) {
+            NoSuchMethodException e = var4;
+            throw new CommonRuntimeException(e);
+        }
+    }
+
     /**
      * 直接根据 class 无参构造器创建实例
      *
@@ -46,6 +60,23 @@ public class ClassUtil {
             return clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new IocRuntimeException(e);
+        }
+    }
+
+    /**
+     * 获取构造器
+     *
+     * @param clazz      类
+     * @param paramTypes 参数类型
+     * @return 构造器
+     */
+    public static Constructor getConstructor(Class clazz, Class... paramTypes) {
+        ArgUtil.notNull(clazz, "clazz");
+        try {
+            return clazz.getConstructor(paramTypes);
+        } catch (NoSuchMethodException var3) {
+            NoSuchMethodException e = var3;
+            throw new CommonRuntimeException(e);
         }
     }
 

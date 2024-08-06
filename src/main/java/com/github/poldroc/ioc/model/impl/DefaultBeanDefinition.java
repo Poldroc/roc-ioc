@@ -1,8 +1,14 @@
 package com.github.poldroc.ioc.model.impl;
 
 import com.github.poldroc.ioc.model.BeanDefinition;
+import com.github.poldroc.ioc.model.ConstructorArgDefinition;
+
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 默认对象定义属性
+ *
  * @author Poldroc
  * @date 2024/7/31
  */
@@ -20,6 +26,11 @@ public class DefaultBeanDefinition implements BeanDefinition {
     private String initialize;
 
     private String destroy;
+
+    private String factoryMethod;
+
+    private List<ConstructorArgDefinition> constructorArgList;
+
     @Override
     public String getName() {
         return name;
@@ -78,6 +89,26 @@ public class DefaultBeanDefinition implements BeanDefinition {
     @Override
     public void setDestroy(String destroy) {
         this.destroy = destroy;
+    }
+
+    @Override
+    public void setFactoryMethod(String factoryMethod) {
+        this.factoryMethod = factoryMethod;
+    }
+
+    @Override
+    public String getFactoryMethod() {
+        return factoryMethod;
+    }
+
+    @Override
+    public List<ConstructorArgDefinition> getConstructorArgList() {
+        return constructorArgList;
+    }
+
+    @Override
+    public void setConstructorArgList(List<ConstructorArgDefinition> constructorArgList) {
+        this.constructorArgList = constructorArgList;
     }
 
 }
