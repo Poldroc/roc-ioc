@@ -2,6 +2,7 @@ package com.github.poldroc.ioc.model.impl;
 
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.model.ConstructorArgDefinition;
+import com.github.poldroc.ioc.model.PropertyArgDefinition;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,8 @@ public class DefaultBeanDefinition implements BeanDefinition {
     private String factoryMethod;
 
     private List<ConstructorArgDefinition> constructorArgList;
+
+    private List<PropertyArgDefinition> propertyArgList;
 
     @Override
     public String getName() {
@@ -109,6 +112,16 @@ public class DefaultBeanDefinition implements BeanDefinition {
     @Override
     public void setConstructorArgList(List<ConstructorArgDefinition> constructorArgList) {
         this.constructorArgList = constructorArgList;
+    }
+
+    @Override
+    public List<PropertyArgDefinition> getPropertyArgList() {
+        return propertyArgList;
+    }
+
+    @Override
+    public void setPropertyArgList(List<PropertyArgDefinition> propertyArgList) {
+        this.propertyArgList = propertyArgList;
     }
 
 }

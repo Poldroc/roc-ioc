@@ -49,7 +49,7 @@ public class ConstructorNewInstanceBean extends AbstractNewInstanceBean {
         List<ConstructorArgDefinition> constructorArgList = beanDefinition.getConstructorArgList();
 
         // 无参构造器
-        if (constructorArgList.isEmpty()) {
+        if (constructorArgList == null || constructorArgList.isEmpty()) {
             return newInstanceOptWithoutArgs(beanClass);
         }
 

@@ -1,0 +1,1 @@
+[{"name":"book","className":"com.github.poldroc.ioc.test.model.Book","lazyInit":false},{"name":"user","className":"com.github.poldroc.ioc.test.model.User","lazyInit":false,"propertyArgList":[{"name":"name","type":"java.lang.String","value":"roc"},{"name":"book","ref":"book"}]}]

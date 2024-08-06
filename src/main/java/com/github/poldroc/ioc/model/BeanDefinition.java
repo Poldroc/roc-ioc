@@ -106,4 +106,16 @@ public interface BeanDefinition {
      */
     void setConstructorArgList(final List<ConstructorArgDefinition> constructorArgList);
 
+    /**
+     * 属性参数列表
+     * @return 属性参数列表
+     */
+    List<PropertyArgDefinition> getPropertyArgList();
+
+    /**
+     * 设置属性参数定义列表
+     * @param propertyArgList 属性参数列表
+     */
+    void setPropertyArgList(final List<PropertyArgDefinition> propertyArgList);
+
 }

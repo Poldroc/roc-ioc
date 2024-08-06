@@ -3,6 +3,7 @@ package com.github.poldroc.ioc.support.lifecycle.create;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.support.lifecycle.NewInstanceBean;
+import com.github.poldroc.ioc.support.lifecycle.property.impl.DefaultBeanPropertyProcessor;
 
 public class DefaultNewInstanceBean implements NewInstanceBean {
 
@@ -34,6 +35,10 @@ public class DefaultNewInstanceBean implements NewInstanceBean {
             instance = ConstructorNewInstanceBean.getInstance()
                     .newInstance(beanFactory, beanDefinition);
         }
+
+        // 属性设置
+        DefaultBeanPropertyProcessor.getInstance()
+                .propertyProcessor(beanFactory, instance, beanDefinition.getPropertyArgList());
 
         // 回结果
         return instance;

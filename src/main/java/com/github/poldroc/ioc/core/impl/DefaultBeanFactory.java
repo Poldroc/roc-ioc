@@ -1,10 +1,14 @@
 package com.github.poldroc.ioc.core.impl;
 
 
+import com.github.houbb.heaven.util.lang.ObjectUtil;
+import com.github.houbb.heaven.util.lang.StringUtil;
+import com.github.houbb.heaven.util.util.CollectionUtil;
 import com.github.poldroc.ioc.constant.enums.ScopeEnum;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
+import com.github.poldroc.ioc.model.ConstructorArgDefinition;
 import com.github.poldroc.ioc.support.lifecycle.DisposableBean;
 import com.github.poldroc.ioc.support.lifecycle.InitializingBean;
 import com.github.poldroc.ioc.support.lifecycle.create.DefaultNewInstanceBean;
@@ -55,10 +59,42 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
 
         this.registerTypeBeanNames(beanName, beanDefinition);
 
-        boolean isLazyInit = beanDefinition.isLazyInit();
-        if (!isLazyInit) {
+        if (needEagerCreateSingleton(beanDefinition)) {
             this.registerSingletonBean(beanName, beanDefinition);
         }
+    }
+
+    /**
+     * 是否需要新建单例
+     * （1）如果不需要立刻加载，则进行延迟处理
+     * （2）如果存在构造器创建，则判断是否存在 dependsOn
+     * 如果 {@link #beanMap} 中包含所有依赖对象，则直接创建，否则需要等待。
+     *
+     * @param beanDefinition 定义信息
+     * @return 是否
+     */
+    private boolean needEagerCreateSingleton(BeanDefinition beanDefinition) {
+        ArgUtil.notNull(beanDefinition, "beanDefinition");
+
+        if (beanDefinition.isLazyInit()) {
+            return false;
+        }
+        List<ConstructorArgDefinition> argDefinitionList = beanDefinition.getConstructorArgList();
+        if (argDefinitionList != null && !argDefinitionList.isEmpty()) {
+            // 判断是否存在依赖
+            for (ConstructorArgDefinition argDefinition : argDefinitionList) {
+                String ref = argDefinition.getRef();
+                if (!ref.isEmpty()) {
+                    Object instance = this.beanMap.get(ref);
+                    // 如果不存在依赖对象，则等待
+                    if (instance == null) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -170,10 +206,6 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
      * @return 对象实例
      */
     private Object createBean(final BeanDefinition beanDefinition) {
-        String className = beanDefinition.getClassName();
-        Class clazz = ClassUtil.getClass(className);
-
-
         // 1. 初始化相关处理
         // 1.1 直接根据构造器
         // 1.2 根据构造器，属性，静态方法
