@@ -1,14 +1,14 @@
 package com.github.poldroc.ioc.core.impl;
 
-
-import com.github.houbb.heaven.util.lang.ObjectUtil;
-import com.github.houbb.heaven.util.lang.StringUtil;
-import com.github.houbb.heaven.util.util.CollectionUtil;
 import com.github.poldroc.ioc.constant.enums.ScopeEnum;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.model.ConstructorArgDefinition;
+import com.github.poldroc.ioc.support.aware.BeanCreateAware;
+import com.github.poldroc.ioc.support.aware.BeanNameAware;
+import com.github.poldroc.ioc.support.cycle.DependsCheckService;
+import com.github.poldroc.ioc.support.cycle.impl.DefaultDependsCheckService;
 import com.github.poldroc.ioc.support.lifecycle.DisposableBean;
 import com.github.poldroc.ioc.support.lifecycle.InitializingBean;
 import com.github.poldroc.ioc.support.lifecycle.create.DefaultNewInstanceBean;
@@ -49,20 +49,57 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
     private List<Pair<Object, BeanDefinition>> instanceBeanDefinitionList = new ArrayList<>();
 
     /**
+     * 依赖检查服务
+     */
+    private DependsCheckService dependsCheckService = new DefaultDependsCheckService();
+
+    /**
      * 注册对象定义信息
      */
     protected void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
         ArgUtil.notEmpty(beanName, "beanName");
         ArgUtil.notNull(beanDefinition, "beanDefinition");
-        // 这里可以添加监听器
         this.beanDefinitionMap.put(beanName, beanDefinition);
 
+        // 注册类型信息
         this.registerTypeBeanNames(beanName, beanDefinition);
 
+        // 添加监听器
+        this.notifyAllBeanNameAware(beanName);
+
+        // 初始化 bean
         if (needEagerCreateSingleton(beanDefinition)) {
             this.registerSingletonBean(beanName, beanDefinition);
         }
     }
+
+    /**
+     * 获取依赖检测服务
+     * @return 服务实现
+     */
+    protected DependsCheckService getDependsCheckService() {
+        return this.dependsCheckService;
+    }
+
+    /**
+     * 通知所有的 BeanNameAware
+     *
+     * @param beanName bean 名称
+     */
+    private void notifyAllBeanNameAware(String beanName) {
+        this.getBeans(BeanNameAware.class).forEach(aw -> aw.setBeanName(beanName));
+    }
+
+    /**
+     * 通知所有的 BeanCreateAware
+     *
+     * @param name     bean 名称
+     * @param instance 实例
+     */
+    private void notifyAllBeanCreateAware(String name, Object instance) {
+        this.getBeans(BeanCreateAware.class).forEach(aw -> aw.setBeanCreate(name, instance));
+    }
+
 
     /**
      * 是否需要新建单例
@@ -121,13 +158,16 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
      * 注册类型和 beanNames 信息
      */
     private void registerTypeBeanNames(String beanName, BeanDefinition beanDefinition) {
-        Class type = getType(beanDefinition);
-        Set<String> beanNameSet = typeBeanNameMap.get(type);
-        if (beanNameSet == null) {
-            beanNameSet = new HashSet<>();
+        Set<Class> typeSet = getTypeSet(beanDefinition);
+        for (Class type : typeSet) {
+            Set<String> beanNames = typeBeanNameMap.get(type);
+            if (beanNames == null) {
+                beanNames = new HashSet<>();
+
+            }
+            beanNames.add(beanName);
+            typeBeanNameMap.put(type, beanNames);
         }
-        beanNameSet.add(beanName);
-        typeBeanNameMap.put(type, beanNameSet);
     }
 
     /**
@@ -166,6 +206,29 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
 
         Object object = getBean(beanName);
         return (T) object;
+    }
+
+
+    /**
+     * 获取 beans 消息列表
+     *
+     * @param requiredType 指定类型
+     * @param <T>          泛型
+     * @return 结果列表
+     */
+    protected <T> List<T> getBeans(Class<T> requiredType) {
+        ArgUtil.notNull(requiredType, "requiredType");
+
+        Set<String> beanNames = this.getBeanNames(requiredType);
+        if (beanNames == null || beanNames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<T> beans = new ArrayList<>();
+        for (String name : beanNames) {
+            beans.add(this.getBean(name, requiredType));
+        }
+        return beans;
     }
 
     @Override
@@ -207,30 +270,42 @@ public class DefaultBeanFactory implements BeanFactory, DisposableBean {
      */
     private Object createBean(final BeanDefinition beanDefinition) {
         // 1. 初始化相关处理
-        // 1.1 直接根据构造器
-        // 1.2 根据构造器，属性，静态方法
+        String beanName = beanDefinition.getName();
+        // 1.1 检测是否存在循环依赖
+        if (dependsCheckService.isCircleRef(beanName)){
+            throw new IocRuntimeException(beanName + " has circle reference.");
+        }
+        // 1.2 创建实例
         Object instance = DefaultNewInstanceBean.getInstance().newInstance(this, beanDefinition);
-        // 1.3 根据注解处理相关信息
 
         // 2. 初始化完成之后的调用
         InitializingBean initializingBean = new DefaultPostConstructBean(instance, beanDefinition);
         initializingBean.initialize();
         // 3. 添加到实例列表中，便于后期销毁
         instanceBeanDefinitionList.add(new Pair<>(instance, beanDefinition));
+        // 4. 通知所有的 BeanCreateAware
+        this.notifyAllBeanCreateAware(beanName, instance);
         return instance;
     }
 
     /**
      * 获取类型信息
-     * （1）这里主要是一种
+     * （1）当前类信息
+     * （2）所有的接口类信息
      *
      * @param beanDefinition 对象属性
      * @return 对应的 bean 信息
      */
-    private Class getType(final BeanDefinition beanDefinition) {
+    private Set<Class> getTypeSet(final BeanDefinition beanDefinition) {
         String className = beanDefinition.getClassName();
-
-        return ClassUtil.getClass(className);
+        Set<Class> classSet = new HashSet<>();
+        Class currentClass = ClassUtil.getClass(className);
+        classSet.add(currentClass);
+        Class[] interfaces = currentClass.getInterfaces();
+        if (interfaces != null && interfaces.length > 0) {
+            classSet.addAll(Arrays.asList(interfaces));
+        }
+        return classSet;
     }
 
 

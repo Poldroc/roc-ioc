@@ -34,6 +34,17 @@ public class DefaultBeanDefinition implements BeanDefinition {
 
     private List<PropertyArgDefinition> propertyArgList;
 
+    /**
+     * 是否为抽象类
+     * （1）如果为抽象的时候，那么就不需要进行创建这个对象。
+     * （2）这个对象更多的是提供属性，暂时不支持使用。
+     */
+    private boolean abstractClass;
+
+    /**
+     * 父类名称
+     */
+    private String parentName;
     @Override
     public String getName() {
         return name;
@@ -123,5 +134,26 @@ public class DefaultBeanDefinition implements BeanDefinition {
     public void setPropertyArgList(List<PropertyArgDefinition> propertyArgList) {
         this.propertyArgList = propertyArgList;
     }
+
+    @Override
+    public boolean isAbstractClass() {
+        return abstractClass;
+    }
+
+    @Override
+    public void setAbstractClass(boolean abstractClass) {
+        this.abstractClass = abstractClass;
+    }
+
+    @Override
+    public String getParentName() {
+        return parentName;
+    }
+
+    @Override
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
 
 }

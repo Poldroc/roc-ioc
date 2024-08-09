@@ -30,10 +30,10 @@ public class JsonApplicationContext extends AbstractApplicationContext {
 
 
     @Override
-    protected List<? extends BeanDefinition> buildBeanDefinitionList() {
+    protected List<BeanDefinition> buildBeanDefinitionList() {
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
         String jsonConfig = FileUtil.getFileContent(is);
-        return JsonBs.deserializeArray(jsonConfig, DefaultBeanDefinition.class);
+        return JsonBs.deserializeArray(jsonConfig, BeanDefinition.class);
     }
 
 }
