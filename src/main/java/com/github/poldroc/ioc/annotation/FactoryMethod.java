@@ -1,4 +1,4 @@
-package com.github.poldroc.ioc.constant.annotation;
+package com.github.poldroc.ioc.annotation;
 
 import java.lang.annotation.*;
 

@@ -1,7 +1,7 @@
 package com.github.poldroc.ioc.support.lifecycle.create;
 
 
-import com.github.poldroc.ioc.constant.annotation.FactoryMethod;
+import com.github.poldroc.ioc.annotation.FactoryMethod;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.util.ClassUtil;

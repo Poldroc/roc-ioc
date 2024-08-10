@@ -1,6 +1,6 @@
 package com.github.poldroc.ioc.test.service;
 
-import com.github.poldroc.ioc.constant.annotation.FactoryMethod;
+import com.github.poldroc.ioc.annotation.FactoryMethod;
 
 public class ColorApple {
 
