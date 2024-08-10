@@ -86,10 +86,11 @@ public class DefaultPreDestroyBean implements DisposableBean {
     }
 
     private void customDestroy() {
-        if (beanDefinition.getDestroy() != null) {
+        String destroy = beanDefinition.getDestroy();
+        if (destroy != null && !destroy.isEmpty()) {
             try {
                 Method method = instance.getClass().getMethod
-                        (beanDefinition.getDestroy());
+                        (destroy);
                 method.invoke(instance);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new IocRuntimeException(e);

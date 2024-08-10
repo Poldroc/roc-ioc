@@ -1,5 +1,7 @@
 package com.github.poldroc.ioc.model;
 
+import com.github.poldroc.ioc.constant.enums.BeanSourceTypeEnum;
+
 import java.util.List;
 
 /**
@@ -141,10 +143,16 @@ public interface BeanDefinition {
      * @param parentName 父类名称
      */
     void setParentName(final String parentName);
-//
-//    /**
-//     * 直接复制一份信息
-//     * @return 结果
-//     */
-//    BeanDefinition clone();
+
+    /**
+     * 设置对象数据来源
+     * @param beanSourceType 对象数据来源
+     */
+    void setBeanSourceType(final BeanSourceTypeEnum beanSourceType);
+
+    /**
+     * 获取对象数据来源
+     * @return 数据来源
+     */
+    BeanSourceTypeEnum getBeanSourceType();
 }

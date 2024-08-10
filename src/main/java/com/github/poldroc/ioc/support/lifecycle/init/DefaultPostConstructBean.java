@@ -86,10 +86,11 @@ public class DefaultPostConstructBean implements InitializingBean {
     }
 
     private void customInit() {
-        if (beanDefinition.getInitialize() != null) {
+        String initialize = beanDefinition.getInitialize();
+        if (initialize != null && !initialize.isEmpty()) {
             try {
                 Method method = instance.getClass().getMethod
-                        (beanDefinition.getInitialize());
+                        (initialize);
                 method.invoke(instance);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new IocRuntimeException(e);

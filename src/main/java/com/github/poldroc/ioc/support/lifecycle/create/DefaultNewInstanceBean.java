@@ -1,5 +1,6 @@
 package com.github.poldroc.ioc.support.lifecycle.create;
 
+import com.github.poldroc.ioc.constant.enums.BeanSourceTypeEnum;
 import com.github.poldroc.ioc.core.BeanFactory;
 import com.github.poldroc.ioc.core.ListableBeanFactory;
 import com.github.poldroc.ioc.model.BeanDefinition;
@@ -29,12 +30,16 @@ public class DefaultNewInstanceBean implements NewInstanceBean {
     @Override
     public Object newInstance(BeanFactory beanFactory, BeanDefinition beanDefinition) {
         Object instance;
+        BeanSourceTypeEnum beanSourceType = beanDefinition.getBeanSourceType();
 
         // 工厂方法创建
         Object factoryMethodBean = FactoryMethodNewInstanceBean.getInstance()
                 .newInstance(beanFactory, beanDefinition);
         if (factoryMethodBean != null) {
             instance = factoryMethodBean;
+        } else if (BeanSourceTypeEnum.CONFIGURATION_BEAN.equals(beanSourceType)) {
+            // config-bean
+            instance = ConfigurationMethodBean.getInstance().newInstance(beanFactory, beanDefinition);
         } else {
             // 根据构造器创建
             instance = ConstructorNewInstanceBean.getInstance()

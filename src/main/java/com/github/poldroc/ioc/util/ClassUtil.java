@@ -2,11 +2,14 @@ package com.github.poldroc.ioc.util;
 
 
 import com.github.houbb.heaven.response.exception.CommonRuntimeException;
+
 import com.github.poldroc.ioc.exception.IocRuntimeException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -95,5 +98,11 @@ public class ClassUtil {
             }
         }
         return Optional.empty();
+    }
+
+    public static List<Method> getMethodList(Class tClass) {
+        com.github.houbb.heaven.util.common.ArgUtil.notNull(tClass, "tClass");
+        Method[] methods = tClass.getMethods();
+        return Arrays.asList(methods);
     }
 }

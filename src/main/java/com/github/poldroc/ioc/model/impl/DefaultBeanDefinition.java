@@ -1,5 +1,6 @@
 package com.github.poldroc.ioc.model.impl;
 
+import com.github.poldroc.ioc.constant.enums.BeanSourceTypeEnum;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.model.ConstructorArgDefinition;
 import com.github.poldroc.ioc.model.PropertyArgDefinition;
@@ -45,6 +46,11 @@ public class DefaultBeanDefinition implements BeanDefinition {
      * 父类名称
      */
     private String parentName;
+
+    /**
+     * 对象数据来源
+     */
+    private BeanSourceTypeEnum beanSourceType;
 
     public static DefaultBeanDefinition newInstance() {
         return new DefaultBeanDefinition();
@@ -157,6 +163,16 @@ public class DefaultBeanDefinition implements BeanDefinition {
     @Override
     public void setParentName(String parentName) {
         this.parentName = parentName;
+    }
+
+    @Override
+    public void setBeanSourceType(BeanSourceTypeEnum beanSourceType) {
+        this.beanSourceType = beanSourceType;
+    }
+
+    @Override
+    public BeanSourceTypeEnum getBeanSourceType() {
+        return beanSourceType;
     }
 
 
