@@ -13,6 +13,8 @@ import com.github.poldroc.ioc.model.AnnotationBeanDefinition;
 import com.github.poldroc.ioc.model.BeanDefinition;
 import com.github.poldroc.ioc.model.impl.DefaultAnnotationBeanDefinition;
 import com.github.poldroc.ioc.model.impl.DefaultBeanDefinition;
+import com.github.poldroc.ioc.support.annotation.Lazys;
+import com.github.poldroc.ioc.support.annotation.Scopes;
 import com.github.poldroc.ioc.support.name.BeanNameStrategy;
 import com.github.poldroc.ioc.support.name.impl.DefaultBeanNameStrategy;
 import com.github.poldroc.ioc.util.ArgUtil;
@@ -97,8 +99,8 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
 
         AnnotationBeanDefinition beanDefinition = new DefaultAnnotationBeanDefinition();
         beanDefinition.setClassName(clazz.getName());
-        beanDefinition.setLazyInit(false);
-        beanDefinition.setScope(ScopeEnum.SINGLETON.getCode());
+        beanDefinition.setLazyInit(Lazys.getLazy(clazz));
+        beanDefinition.setScope(Scopes.getScope(clazz));
         beanDefinition.setBeanSourceType(BeanSourceTypeEnum.CONFIGURATION);
         if (StringUtil.isEmpty(beanName)) {
             beanName = beanNameStrategy.generateBeanName(beanDefinition);
@@ -150,8 +152,8 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                 beanDefinition.setConfigurationBeanMethod(methodName);
 
                 // 这里后期需要添加 property/constructor 对应的实现
-                beanDefinition.setLazyInit(false);
-                beanDefinition.setScope(ScopeEnum.SINGLETON.getCode());
+                beanDefinition.setLazyInit(Lazys.getLazy(method));
+                beanDefinition.setScope(Scopes.getScope(method));
 
                 resultList.add(beanDefinition);
             }
