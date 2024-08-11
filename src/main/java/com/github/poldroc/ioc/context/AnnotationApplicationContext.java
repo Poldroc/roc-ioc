@@ -4,9 +4,12 @@ package com.github.poldroc.ioc.context;
 import com.github.houbb.heaven.support.instance.impl.Instances;
 
 
+import com.github.houbb.heaven.util.guava.Guavas;
 import com.github.houbb.heaven.util.lang.StringUtil;
+import com.github.houbb.heaven.util.util.ArrayUtil;
 import com.github.poldroc.ioc.annotation.Bean;
 import com.github.poldroc.ioc.annotation.Configuration;
+import com.github.poldroc.ioc.annotation.Import;
 import com.github.poldroc.ioc.constant.enums.BeanSourceTypeEnum;
 import com.github.poldroc.ioc.constant.enums.ScopeEnum;
 import com.github.poldroc.ioc.model.AnnotationBeanDefinition;
@@ -22,11 +25,7 @@ import com.github.poldroc.ioc.util.ClassUtil;
 
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 基于注解的应用上下文
@@ -65,7 +64,9 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
     @Override
     protected List<BeanDefinition> buildBeanDefinitionList() {
         List<BeanDefinition> resultList = new ArrayList<>();
-        for (Class clazz : configClasses) {
+        // configClasses 为配置类，需要加上类上的 @import 注解的类
+        List<Class> configList = getConfigClassList();
+        for (Class clazz : configList) {
             if (clazz.isAnnotationPresent(Configuration.class)) {
                 Optional<AnnotationBeanDefinition> configurationOpt = buildConfigurationBeanDefinition(clazz);
                 if (!configurationOpt.isPresent()) {
@@ -82,6 +83,48 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
         }
         return resultList;
     }
+
+    /**
+     * 获取配置类列表信息
+     * （1）这里首先需要进行一层过滤，避免重复导入。
+     * （2）这里需要递归处理，处理 class 头上的 {@link Import} 配置信息。
+     *
+     * @return 配置类列表
+     */
+    private List<Class> getConfigClassList() {
+        Set<Class> configSet = new HashSet<>(configClasses.length);
+
+        for (Class configClass : configClasses) {
+            // 添加每个配置类上的import注解的类
+            addAllImportClass(configSet, configClass);
+        }
+        return new ArrayList<>(configSet);
+    }
+
+    /**
+     * 添加所有导入配置信息
+     *
+     * @param configSet   配置集合
+     * @param configClass 配置类
+     */
+    private void addAllImportClass(final Set<Class> configSet, final Class configClass) {
+        configSet.add(configClass);
+
+        if (configClass.isAnnotationPresent(Import.class)) {
+            Import importInfo = (Import) configClass.getAnnotation(Import.class);
+
+            Class[] importClasses = importInfo.value();
+            if (importClasses != null && importClasses.length > 0) {
+                for (Class importClass : importClasses) {
+                    // 1. 循环添加
+                    configSet.add(importClass);
+                    // 2. 递归处理
+                    addAllImportClass(configSet, importClass);
+                }
+            }
+        }
+    }
+
 
     /**
      * 构建配置对象定义
